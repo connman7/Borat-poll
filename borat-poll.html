@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Borat Poll</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: #0f1b33;
+      --text: #e9eef7;
+      --muted: #a6b3cc;
+      --border: rgba(255,255,255,.12);
+      --good: #2dd4bf;
+      --bad: #fb7185;
+      --btn: rgba(255,255,255,.08);
+      --btnHover: rgba(255,255,255,.14);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(900px 500px at 15% 10%, rgba(45,212,191,.16), transparent 60%),
+                  radial-gradient(800px 500px at 85% 25%, rgba(251,113,133,.14), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 24px;
+    }
+    .wrap{
+      width: min(760px, 100%);
+      display:grid;
+      gap: 16px;
+    }
+    .card{
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    h1{
+      margin: 0 0 6px;
+      font-size: 22px;
+      letter-spacing: .2px;
+    }
+    p{
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    label{
+      display:block;
+      margin: 10px 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      outline: none;
+      font-size: 15px;
+    }
+    input:focus{
+      border-color: rgba(45,212,191,.55);
+      box-shadow: 0 0 0 4px rgba(45,212,191,.12);
+    }
+    .btnRow{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    button{
+      cursor:pointer;
+      border: 1px solid var(--border);
+      background: var(--btn);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      transition: transform .06s ease, background .15s ease;
+      user-select:none;
+    }
+    button:hover{ background: var(--btnHover); }
+    button:active{ transform: translateY(1px); }
+    .yes{ border-color: rgba(45,212,191,.45); }
+    .no{ border-color: rgba(251,113,133,.45); }
+    .msg{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    .msg strong{ display:block; margin-bottom: 2px; }
+    .tag{
+      display:inline-block;
+      margin-top: 6px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .tag.good{ color: var(--good); border-color: rgba(45,212,191,.35); }
+    .tag.bad{ color: var(--bad); border-color: rgba(251,113,133,.35); }
+
+    .list{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+    .list li{
+      margin: 6px 0;
+    }
+    .smallRow{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .linkBtn{
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Borat Poll</h1>
+      <p>Type your name, then click <b>Yes</b> or <b>No</b> to answer: “Do you like the movie <i>Borat</i>?”</p>
+
+      <label for="name">Your name</label>
+      <input id="name" type="text" placeholder="e.g., Justin" autocomplete="name" />
+
+      <div class="btnRow">
+        <button class="yes" id="btnYes" type="button">Yes, I like it</button>
+        <button class="no" id="btnNo" type="button">No, I don’t</button>
+        <button id="btnReset" type="button">Reset</button>
+      </div>
+
+      <div class="msg" id="message" aria-live="polite">
+        <strong>Waiting for your answer…</strong>
+        <span>Enter your name and pick Yes or No.</span>
+      </div>
+
+      <div class="smallRow">
+        <span id="countText">Responses this session: 0</span>
+        <button class="linkBtn" id="btnClearList" type="button">Clear responses list</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h1>Responses</h1>
+      <p>This list is stored only in this page (browser localStorage). Refreshing won’t delete it unless you clear it.</p>
+      <ol class="list" id="responses"></ol>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const els = {
+      name: document.getElementById("name"),
+      btnYes: document.getElementById("btnYes"),
+      btnNo: document.getElementById("btnNo"),
+      btnReset: document.getElementById("btnReset"),
+      btnClearList: document.getElementById("btnClearList"),
+      message: document.getElementById("message"),
+      responses: document.getElementById("responses"),
+      countText: document.getElementById("countText"),
+    };
+
+    const STORAGE_KEY = "borat_poll_responses_v1";
+
+    function loadResponses() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveResponses(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderList(list) {
+      els.responses.innerHTML = "";
+      list.forEach(item => {
+        const li = document.createElement("li");
+        const when = new Date(item.time).toLocaleString();
+        li.innerHTML = `<b>${escapeHtml(item.name)}</b> answered <b>${item.answer}</b> <span style="opacity:.75">(${escapeHtml(when)})</span>`;
+        els.responses.appendChild(li);
+      });
+      els.countText.textContent = `Responses this session: ${list.length}`;
+    }
+
+    function setMessage(name, liked) {
+      const safeName = escapeHtml(name);
+      const tagClass = liked ? "good" : "bad";
+      const tagText = liked ? "Veeeery nice 👍" : "Not my taste 👎";
+      const mainText = liked
+        ? `${safeName}, you said you like Borat.`
+        : `${safeName}, you said you don’t like Borat.`;
+
+      els.message.innerHTML = `
+        <strong>${mainText}</strong>
+        <span>Thanks for voting.</span><br/>
+        <span class="tag ${tagClass}">${tagText}</span>
+      `;
+    }
+
+    function getNameOrWarn() {
+      const name = els.name.value.trim();
+      if (!name) {
+        els.message.innerHTML = `
+          <strong>Please enter your name first.</strong>
+          <span>Then click Yes or No.</span>
+        `;
+        els.name.focus();
+        return null;
+      }
+      return name;
+    }
+
+    function vote(liked) {
+      const name = getNameOrWarn();
+      if (!name) return;
+
+      const list = loadResponses();
+      list.unshift({
+        name,
+        answer: liked ? "YES" : "NO",
+        time: Date.now()
+      });
+      saveResponses(list);
+      renderList(list);
+      setMessage(name, liked);
+
+      // Optional: clear the input after voting
+      els.name.value = "";
+      els.name.focus();
+    }
+
+    function resetUI() {
+      els.name.value = "";
+      els.message.innerHTML = `
+        <strong>Waiting for your answer…</strong>
+        <span>Enter your name and pick Yes or No.</span>
+      `;
+      els.name.focus();
+    }
+
+    function clearList() {
+      saveResponses([]);
+      renderList([]);
+      resetUI();
+    }
+
+    // Wire up buttons
+    els.btnYes.addEventListener("click", () => vote(true));
+    els.btnNo.addEventListener("click", () => vote(false));
+    els.btnReset.addEventListener("click", resetUI);
+    els.btnClearList.addEventListener("click", clearList);
+
+    // Nice UX: press Enter to vote "Yes" by default
+    els.name.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") vote(true);
+    });
+
+    // Initial render from storage
+    renderList(loadResponses());
+    resetUI();
+  </script>
+</body>
+</html>
